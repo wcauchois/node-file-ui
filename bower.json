@@ -16,11 +16,14 @@
   "dependencies": {
     "react": "~0.13.1",
     "bluebird": "~2.9.24",
-    "zepto": "~1.1.6"
+    "lodash": "~3.6.0",
+    "jquery": "~2.1.3",
+    "director": "~1.2.8",
+    "highlightjs": "~8.4.0"
   },
   "overrides": {
     "react": {
-      "main": "react-with-addons.min.js"
+      "main": "react-with-addons.js"
     }
   }
 }
