@@ -1,0 +1,26 @@
+{
+  "name": "node-file-ui",
+  "main": "index.js",
+  "version": "0.0.0",
+  "authors": [
+    "Bill Cauchois <wcauchois@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "react": "~0.13.1",
+    "bluebird": "~2.9.24",
+    "zepto": "~1.1.6"
+  },
+  "overrides": {
+    "react": {
+      "main": "react-with-addons.min.js"
+    }
+  }
+}
