@@ -143,7 +143,7 @@ app.get(/raw\/(.*)/, function(req, res) {
 
 app.use(express.static('public'));
 
-var PORT = 3000;
+var PORT = process.env.PORT || 3000;
 app.listen(PORT);
 util.log("Listening on port " + PORT);
 
