@@ -1,31 +1,12 @@
 
-function fileExtension(name) {
-  var extMatch = name.match(/\.[a-z]+$/);
-  if (extMatch) {
-    return extMatch[0].substring(1);
-  } else {
-    return '';
-  }
-}
-
 var FileRow = React.createClass({
   render: function() {
-    var href = "";
-
-    if (this.props.file.type === "directory") {
-      href = "#/dir" + this.props.file.fullPath;
-    } else if (this.props.file.type === "file") {
-      if (_.has(codeFileExtMap, fileExtension(this.props.file.name))) {
-        href = "#/code" + this.props.file.fullPath;
-      } else {
-        href = "raw" + this.props.file.fullPath;
-      }
-    }
-
     return (
       <tr>
         <td>
-          <a href={href}>{this.props.file.name}</a>
+          <a href={"#" + this.props.file.fullPath}>
+            {this.props.file.name}
+          </a>
         </td>
         <td>{this.props.file.type}</td>
       </tr>
@@ -44,7 +25,7 @@ var FileList = React.createClass({
             <td colSpan="2">
               <span className="upArrow">&crarr;</span>
               &nbsp;
-              <a href={"#/dir" + this.props.parentDir}>
+              <a href={"#" + this.props.parentDir}>
                 Up one level
               </a>
             </td>
@@ -58,64 +39,99 @@ var FileList = React.createClass({
   }
 });
 
-var codeFileExtMap = {
-  'js': 'javascript',
-  'py': 'python',
-  'c': 'c',
-  'scala': 'scala',
-  'json': 'json',
-  'jsx': 'jsx',
-  'less': 'css',
-  'css': 'css'
-};
-
-var CodeViewer = React.createClass({
+var FileHeader = React.createClass({
   render: function() {
     return (
-      <div class="u-full-width">
-        <pre className={codeFileExtMap[fileExtension(this.props.fileName)]}>
-          {this.props.code}
-        </pre>
+      <div className="fileHeader">
+        <div className="u-pull-left">
+          <span>&#8592;</span> <a href={"#" + this.props.parentDir}>Go back</a>
+        </div>
+        <div className="u-pull-right">
+          <a href={"raw/" + this.props.fullPath}>View raw</a>
+        </div>
+      </div>
+    );
+  }
+});
+
+var TextViewer = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <FileHeader parentDir={this.props.parentDir} fullPath={this.props.fullPath} />
+        <div className="u-full-width">
+          <pre className={this.props.highlightClass || ''}>
+            {this.props.fileContents}
+          </pre>
+        </div>
       </div>
     );
   },
 
   componentDidMount: function() {
-    var domNode = React.findDOMNode(this);
-    hljs.highlightBlock(domNode.getElementsByTagName('pre')[0]);
+    if (this.props.highlightClass) {
+      var domNode = React.findDOMNode(this);
+      hljs.highlightBlock(domNode.getElementsByTagName('pre')[0]);
+    }
   }
 });
 
-function renderDirectory(dirName) {
-  return Promise.resolve(
-    $.getJSON('/files.json', {dir: dirName})
-  ).then(function(response) {
-    React.render(
-      <FileList files={response.files} parentDir={response.parentDir} dirName={dirName} />,
-      document.getElementById('container')
+var ShowMarkdown = React.createClass({
+  render: function() {
+    return (
+      <div>
+        <FileHeader parentDir={this.props.parentDir} fullPath={this.props.fullPath} />
+        <div className="renderArea"></div>
+      </div>
     );
-  });
-}
+  },
+
+  componentDidMount: function() {
+    var converter = new Showdown.converter();
+    var html = converter.makeHtml(this.props.fileContents);
+    $(React.findDOMNode(this)).find('.renderArea').html(html);
+  }
+});
+
+var ImageViewer = React.createClass({
+  render: function() {
+    return (
+      <div className="u-full-width">
+        <FileHeader parentDir={this.props.parentDir} fullPath={this.props.fullPath} />
+        <div className="imageContainer">
+          <img src={'raw' + this.props.fullPath} />
+        </div>
+      </div>
+    );
+  }
+});
 
 var router = new Router();
 
-router.on('/', function() {
-  renderDirectory('/');
-});
-
-router.on(/\/dir\/(.*)/, function(dirNameNoLeadingSlash) {
-  var dirName = '/' + dirNameNoLeadingSlash;
-  renderDirectory(dirName);
-});
-
-router.on(/\/code\/(.*)/, function(fileName) {
+router.on('/(.*)', function(rawPath) {
+  var path = '/' + rawPath;
   Promise.resolve(
-    $.get('raw/' + fileName + '?plain=true')
-  ).then(function(fileContents) {
-    React.render(
-      <CodeViewer code={fileContents} fileName={fileName} />,
-      document.getElementById('container')
-    )
+    $.getJSON('resolve.json', {path: path})
+  ).then(function(response) {
+    var component;
+    if (response.type === 'directory') {
+      component = FileList;
+    } else if (response.type === 'text') {
+      component = TextViewer;
+    } else if (response.type === 'markdown') {
+      component = ShowMarkdown;
+    } else if (response.type === 'image') {
+      component = ImageViewer;
+    }
+
+    if (component) {
+      React.render(
+        React.createElement(component, response),
+        document.getElementById('container')
+      );
+    } else {
+      window.location.replace('raw' + path);
+    }
   });
 });
 
