@@ -47,7 +47,7 @@ var FileHeader = React.createClass({
           <span>&#8592;</span> <a href={"#" + this.props.parentDir}>Go back</a>
         </div>
         <div className="u-pull-right">
-          <a href={"raw/" + this.props.fullPath}>View raw</a>
+          <a href={"raw" + this.props.fullPath}>View raw</a>
         </div>
       </div>
     );
