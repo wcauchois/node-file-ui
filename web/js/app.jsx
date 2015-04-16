@@ -76,7 +76,7 @@ var TextViewer = React.createClass({
   }
 });
 
-var ShowMarkdown = React.createClass({
+var MarkdownViewer = React.createClass({
   render: function() {
     return (
       <div>
@@ -119,7 +119,7 @@ router.on('/(.*)', function(rawPath) {
     } else if (response.type === 'text') {
       component = TextViewer;
     } else if (response.type === 'markdown') {
-      component = ShowMarkdown;
+      component = MarkdownViewer;
     } else if (response.type === 'image') {
       component = ImageViewer;
     }
